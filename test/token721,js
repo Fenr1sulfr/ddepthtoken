@@ -1,0 +1,52 @@
+// SPDX-License-Identifier: MIT
+const MyERC721Token = artifacts.require('MyERC721Token');
+
+contract('MyERC721Token', (accounts) => {
+    const [owner, user1, user2] = accounts;
+
+    let myERC721TokenInstance;
+
+    before(async () => {
+        myERC721TokenInstance = await MyERC721Token.new('DepthNFT', 'DPH', owner);
+    });
+
+    it('should have correct name and symbol', async () => {
+        const name = await myERC721TokenInstance.name();
+        const symbol = await myERC721TokenInstance.symbol();
+
+        assert.equal(name, 'DepthNFT', 'Incorrect name');
+        assert.equal(symbol, 'DPH', 'Incorrect symbol');
+    });
+
+    it('should allow minting by the owner', async () => {
+        const tokenId = await myERC721TokenInstance.mint(user1, { from: owner });
+
+        assert.equal(tokenId, 0, 'Incorrect token ID');
+
+        const ownerOfToken = await myERC721TokenInstance.ownerOf(tokenId);
+        assert.equal(ownerOfToken, user1, 'Token not owned by the expected address');
+    });
+
+    it('should allow setting token URI by the owner', async () => {
+        const tokenId = 0;
+        const tokenURI = 'https://example.com/metadata/token0.json';
+
+        await myERC721TokenInstance.updateTokenURI(tokenId, tokenURI, { from: owner });
+
+        const retrievedURI = await myERC721TokenInstance.tokenURI(tokenId);
+        assert.equal(retrievedURI, tokenURI, 'Token URI not set correctly');
+    });
+
+    it('should allow updating token name and symbol by the owner', async () => {
+        const newName = 'NewDepthNFT';
+        const newSymbol = 'NDPH';
+
+        await myERC721TokenInstance.updateTokenInfo(newName, newSymbol, { from: owner });
+
+        const updatedName = await myERC721TokenInstance.name();
+        const updatedSymbol = await myERC721TokenInstance.symbol();
+
+        assert.equal(updatedName, newName, 'Name not updated correctly');
+        assert.equal(updatedSymbol, newSymbol, 'Symbol not updated correctly');
+    });
+});
